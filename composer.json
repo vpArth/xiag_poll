@@ -1,0 +1,13 @@
+{
+    "name": "arth/xiag",
+    "description": "XiagAG Test task",
+    "type": "project",
+    "license": "private",
+    "authors": [
+        {
+            "name": "Alexander Deider",
+            "email": "arth.inbox@gmail.com"
+        }
+    ],
+    "require": {}
+}
