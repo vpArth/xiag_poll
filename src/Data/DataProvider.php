@@ -50,7 +50,18 @@ class DataProvider implements DataProviderInterface
   }
   public function findPoll(string $uuid): array
   {
-    throw new AppException('Not implemented yet');
+    $result = $this->crud->find('Poll', [
+        'uuid' => $uuid,
+    ]);
+    if (!$result) {
+      throw new AppException("Poll#{$uuid} not found");
+    }
+
+    $result['answers'] = $this->crud->find('Answer', [
+        'id_poll' => $result['id'],
+    ], 'rows');
+
+    return $result;
   }
   public function vote(int $answer_id, string $username): array
   {

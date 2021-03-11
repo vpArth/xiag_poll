@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 use Xiag\Poll\Data\CrudDbInterface;
 use Xiag\Poll\Data\DataProvider;
 use Xiag\Poll\Util\UniqIdGenInterface;
+use function array_merge;
 use function random_int;
 use function uniqid;
 
@@ -91,10 +92,42 @@ class DataProviderTest extends TestCase
         ],
     ], $poll);
   }
-  /** @group ignore */
+
   public function testFindPoll(): void
   {
+    $data = $this->testData['ok'];
+
+    $uuid    = $data['poll']['uuid'];
+    $id_poll = $data['poll']['id'];
+
+    $this->crud->expects(self::exactly(2))
+        ->method('find')
+        ->withConsecutive(...[
+            ['Poll', ['uuid' => $uuid]],
+            ['Answer', ['id_poll' => $id_poll]],
+        ])
+        ->willReturnOnConsecutiveCalls($data['poll'], $data['answers']);
+
+    $poll = $this->subject->findPoll($uuid);
+
+    $expected = array_merge($data['poll'], ['answers' => $data['answers']]);
+    self::assertEquals($expected, $poll);
   }
+
+  public function testFindPollFail(): void
+  {
+    $absent_uuid = uniqid('absent', false);
+
+    $this->crud->expects(self::once())
+        ->method('find')
+        ->with('Poll', ['uuid' => $absent_uuid])
+        ->willReturn(null);
+
+    $this->expectExceptionMessage("Poll#{$absent_uuid} not found");
+
+    $this->subject->findPoll($absent_uuid);
+  }
+
   /** @group ignore */
   public function testVote(): void
   {
