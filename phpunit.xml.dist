@@ -5,6 +5,7 @@
          colors="true"
          failOnRisky="true"
          failOnWarning="true"
+         bootstrap="tests/bootstrap.php"
          cacheResultFile="/tmp/.xiag.phpunit.result.cache"
 >
     <testsuites>
