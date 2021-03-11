@@ -10,6 +10,7 @@
         }
     ],
     "require": {
+        "ext-pdo": "*",
         "php-di/php-di": "^6.3",
         "vlucas/phpdotenv": "^5.3"
     },
