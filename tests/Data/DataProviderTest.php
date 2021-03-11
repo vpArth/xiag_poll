@@ -6,6 +6,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Xiag\Poll\Data\CrudDbInterface;
 use Xiag\Poll\Data\DataProvider;
+use Xiag\Poll\Data\DBException;
 use Xiag\Poll\Util\UniqIdGenInterface;
 use function array_merge;
 use function random_int;
@@ -128,8 +129,29 @@ class DataProviderTest extends TestCase
     $this->subject->findPoll($absent_uuid);
   }
 
-  /** @group ignore */
   public function testVote(): void
   {
+    $answer_id = random_int(100, 199);
+    $vote_id   = random_int(300, 399);
+    $username  = uniqid('user-', false);
+
+    $this->crud->expects(self::once())
+        ->method('insert')
+        ->with('Vote', ['answer_id' => $answer_id, 'username' => $username])
+        ->willReturn($vote_id);
+
+    $vote = $this->subject->vote($answer_id, $username);
+    self::assertEquals(['id' => $vote_id, 'answer_id' => $answer_id, 'username' => $username], $vote);
+  }
+
+  public function testVoteFail(): void
+  {
+    $this->crud->expects(self::once())
+        ->method('insert')
+        ->willThrowException(new DBException('[HY00] Foreign key constraint failed...'));
+
+    $id = 113;
+    $this->expectExceptionMessage("Answer#{$id} not found");
+    $this->subject->vote($id, 'John');
   }
 }

@@ -65,6 +65,16 @@ class DataProvider implements DataProviderInterface
   }
   public function vote(int $answer_id, string $username): array
   {
-    throw new AppException('Not implemented yet');
+    $vote = [
+        'answer_id' => $answer_id,
+        'username'  => $username,
+    ];
+    try {
+      $vote['id'] = $this->crud->insert('Vote', $vote);
+    } catch (DBException $ex) {
+      throw new DBException("Answer#{$answer_id} not found", 404, $ex);
+    }
+
+    return $vote;
   }
 }
