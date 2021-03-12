@@ -10,5 +10,10 @@ interface SqlDbInterface
   public function row(string $sql, array $data = []): array;
   public function rows(string $sql, array $data = []): array;
 
+  public function inTransaction(): bool;
+  public function beginTransaction(): bool;
+  public function rollBack(): bool;
+  public function commit(): bool;
+
   public function last_insert_id(): string;
 }

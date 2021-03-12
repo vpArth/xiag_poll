@@ -11,29 +11,29 @@ class SchemaManager
   public const TABLE_POLL   = 'Poll';
 
   public const SQL_CREATE_POLL_TABLE   = <<<'SQL'
-CREATE TABLE %s (
+CREATE TABLE IF NOT EXISTS %s (
   id integer not null primary key,
-  uuid varchar(36),
-  question varchar(255)
+  uuid varchar(36) not null unique,
+  question varchar(255) not null 
 )
 SQL;
   public const SQL_CREATE_ANSWER_TABLE = <<<'SQL'
-CREATE TABLE %s (
+CREATE TABLE IF NOT EXISTS %s (
     id integer not null primary key,
-    poll_id integer not null references %s(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    title varchar(255)
+    id_poll integer not null references %s(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    title varchar(16) not null
 )
 SQL;
 
   public const SQL_CREATE_VOTE_TABLE = <<<'SQL'
-CREATE TABLE %s (
+CREATE TABLE IF NOT EXISTS %s (
     id integer not null primary key,
-    answer_id integer not null references %s(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    username varchar(255)
+    id_answer integer not null references %s(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    username varchar(255) not null
 )
 SQL;
 
-  public const SQL_DROP_TABLE = 'DROP TABLE %s';
+  public const SQL_DROP_TABLE = 'DROP TABLE IF EXISTS %s';
 
   /** @var SqlDbInterface */
   protected $db;

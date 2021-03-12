@@ -2,6 +2,7 @@
 
 namespace Tests\Data;
 
+use Generator;
 use PDO;
 use PDOStatement;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -122,8 +123,8 @@ class PdoDBTest extends TestCase
   }
   public function testRow(): void
   {
-    $sql    = uniqid('sql-', false);
-    $data   = [1, 2, 'x'];
+    $sql  = uniqid('sql-', false);
+    $data = [1, 2, 'x'];
 
     $expected = ['a' => 42];
 
@@ -139,8 +140,8 @@ class PdoDBTest extends TestCase
   }
   public function testRows(): void
   {
-    $sql    = uniqid('sql-', false);
-    $data   = [1, 2, 'x'];
+    $sql  = uniqid('sql-', false);
+    $data = [1, 2, 'x'];
 
     $expected = [['a' => 3], ['a' => 5], ['a' => 8]];
 
@@ -159,8 +160,8 @@ class PdoDBTest extends TestCase
   {
     $expected = uniqid('id-', false);
     $this->pdo->expects(self::once())
-      ->method('lastInsertId')
-      ->willReturn($expected);
+        ->method('lastInsertId')
+        ->willReturn($expected);
 
     $actual = $this->subject->last_insert_id();
 
@@ -190,5 +191,22 @@ class PdoDBTest extends TestCase
     $obj->expects(self::once())
         ->method('errorCode')
         ->willReturn($code);
+  }
+
+  /**
+   * @dataProvider pdoProxyData
+   */
+  public function testPdoBoolProxies($method): void
+  {
+    $this->pdo->method($method)->willReturnOnConsecutiveCalls(false, true);
+    self::assertFalse($this->subject->{$method}());
+    self::assertTrue($this->subject->{$method}());
+  }
+  public function pdoProxyData(): ?Generator
+  {
+    yield ['inTransaction'];
+    yield ['beginTransaction'];
+    yield ['rollBack'];
+    yield ['commit'];
   }
 }

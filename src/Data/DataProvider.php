@@ -2,6 +2,7 @@
 
 namespace Xiag\Poll\Data;
 
+use Throwable;
 use Xiag\Poll\Util\UniqIdGenInterface;
 use function explode;
 use function mb_strpos;
@@ -43,18 +44,25 @@ class DataProvider implements DataProviderInterface
         'uuid'     => $uuidCode,
     ];
 
-    $poll['id'] = $this->crud->insert('Poll', $poll);
+    $this->db->beginTransaction();
+    try {
+      $poll['id'] = $this->crud->insert('Poll', $poll);
 
-    $poll['answers'] = [];
-    foreach ($answers as $answerTitle) {
-      $answer = [
-          'id_poll' => $poll['id'],
-          'title'   => $answerTitle,
-      ];
+      $poll['answers'] = [];
+      foreach ($answers as $answerTitle) {
+        $answer = [
+            'id_poll' => $poll['id'],
+            'title'   => $answerTitle,
+        ];
 
-      $answer['id'] = $this->crud->insert('Answer', $answer);
+        $answer['id'] = $this->crud->insert('Answer', $answer);
 
-      $poll['answers'][] = $answer;
+        $poll['answers'][] = $answer;
+      }
+      $this->db->commit();
+    } catch (Throwable $ex) {
+      $this->db->rollBack();
+      throw $ex;
     }
 
     return $poll;

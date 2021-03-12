@@ -66,6 +66,23 @@ class PdoDB implements SqlDbInterface
     return $this->pdo->lastInsertId();
   }
 
+  public function inTransaction(): bool
+  {
+    return $this->pdo->inTransaction();
+  }
+  public function beginTransaction(): bool
+  {
+    return $this->pdo->beginTransaction();
+  }
+  public function rollBack(): bool
+  {
+    return $this->pdo->rollBack();
+  }
+  public function commit(): bool
+  {
+    return $this->pdo->commit();
+  }
+
   protected function error(PDOStatement $stmt = null): void
   {
     $errorInfo = $stmt ? $stmt->errorInfo() : $this->pdo->errorInfo();
@@ -78,5 +95,4 @@ class PdoDB implements SqlDbInterface
     $error = $errorInfo[2] ?? $errorInfo;
     throw new DBException("[{$errorCode}] {$error}");
   }
-
 }
