@@ -9,7 +9,10 @@ use Xiag\Poll\Data\DataProviderInterface;
 use Xiag\Poll\Exception\AppException;
 use Xiag\Poll\Util\RequestInterface;
 use function json_decode;
+use function ob_get_clean;
 use function ob_start;
+use function random_int;
+use function sprintf;
 use function uniqid;
 
 class ApiControllerTest extends TestCase
@@ -86,7 +89,7 @@ class ApiControllerTest extends TestCase
         });
 
     $this->expectException(AppException::class);
-    $this->expectExceptionMessage(ApiController::ERROR_INVALID_QUESTION);
+    $this->expectExceptionMessage(sprintf(ApiController::ERROR_EMPTY_FIELD, 'question'));
 
     $this->subject->createPoll($this->request);
   }
@@ -105,5 +108,63 @@ class ApiControllerTest extends TestCase
     $this->expectExceptionMessage(ApiController::ERROR_INVALID_ANSWERS);
 
     $this->subject->createPoll($this->request);
+  }
+
+  public function testSubmitVote(): void
+  {
+    $data = [
+        'answer_id' => random_int(501, 599),
+        'username'  => uniqid('user_', false),
+    ];
+    $this->request->method('get')
+        ->willReturnCallback(static function ($key, $default = null) use ($data) {
+          return $data[$key] ?? $default;
+        });
+
+    $response       = $data;
+    $response['id'] = uniqid('id_', false);
+
+    $this->dp->expects(self::once())
+        ->method('vote')
+        ->with($data['answer_id'], $data['username'])
+        ->willReturn($response);
+
+    ob_start();
+    $this->subject->submitVote($this->request);
+    $echo = ob_get_clean();
+
+    self::assertEquals($response, json_decode($echo, true));
+  }
+  public function testSubmitVoteNoAnswer(): void
+  {
+    $data = [
+        'answer_id' => 'none',
+        'username'  => uniqid('user_', false),
+    ];
+    $this->request->method('get')
+        ->willReturnCallback(static function ($key, $default = null) use ($data) {
+          return $data[$key] ?? $default;
+        });
+
+    $this->expectException(AppException::class);
+    $this->expectExceptionMessage(sprintf(ApiController::ERROR_EMPTY_FIELD, 'answer_id'));
+
+    $this->subject->submitVote($this->request);
+  }
+  public function testSubmitVoteNoUsername(): void
+  {
+    $data = [
+        'answer_id' => 1,
+        'username'  => "   \t  ",
+    ];
+    $this->request->method('get')
+        ->willReturnCallback(static function ($key, $default = null) use ($data) {
+          return $data[$key] ?? $default;
+        });
+
+    $this->expectException(AppException::class);
+    $this->expectExceptionMessage(sprintf(ApiController::ERROR_EMPTY_FIELD, 'username'));
+
+    $this->subject->submitVote($this->request);
   }
 }

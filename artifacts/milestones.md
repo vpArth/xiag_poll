@@ -2,8 +2,8 @@ Plan:
  ☑ Router  
    Should select matched controller/action and inject dependencies
  - ApiController
-   - POST /poll
-   - POST /vote
+   ☑ POST /poll
+   ☑ POST /vote
    - GET /poll/{uuid}/results
  - UIController
    - createPollPage GET /

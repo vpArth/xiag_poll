@@ -7,11 +7,12 @@ use Xiag\Poll\Exception\AppException;
 use Xiag\Poll\Util\RequestInterface;
 use function array_filter;
 use function array_map;
+use function sprintf;
 use function trim;
 
 class ApiController extends BaseApiController
 {
-  public const ERROR_INVALID_QUESTION = 'Field question is empty';
+  public const ERROR_EMPTY_FIELD = 'Field %s is empty';
   public const ERROR_INVALID_ANSWERS  = 'There must be at least two possible non-empty answers';
   /**
    * @var DataProviderInterface
@@ -24,10 +25,10 @@ class ApiController extends BaseApiController
 
   public function createPoll(RequestInterface $request): void
   {
-    $question = $request->get('question');
+    $question = trim($request->get('question'));
 
     if (empty($question)) {
-      throw new AppException(self::ERROR_INVALID_QUESTION);
+      throw new AppException(sprintf(self::ERROR_EMPTY_FIELD, 'question'));
     }
 
     $answers = $request->get('answers', []);
@@ -44,10 +45,23 @@ class ApiController extends BaseApiController
 
     $this->json($pollData);
   }
-  public function submitVote(): void
+
+  public function submitVote(RequestInterface $request): void
   {
-    $this->json(['status' => self::class . '::submitVote not implemented']);
+    $answer_id = (int) $request->get('answer_id');
+    if (empty($answer_id)) {
+      throw new AppException(sprintf(self::ERROR_EMPTY_FIELD, 'answer_id'));
+    }
+    $username = trim($request->get('username'));
+    if (empty($username)) {
+      throw new AppException(sprintf(self::ERROR_EMPTY_FIELD, 'username'));
+    }
+
+    $vote = $this->data->vote($answer_id, $username);
+
+    $this->json($vote);
   }
+
   public function results(string $uuid): void
   {
     $this->json([
