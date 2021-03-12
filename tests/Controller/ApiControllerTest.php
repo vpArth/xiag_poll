@@ -167,7 +167,6 @@ class ApiControllerTest extends TestCase
 
     $this->subject->submitVote($this->request);
   }
-
   public function testSubmitVoteBadUsername(): void
   {
     $data = [
@@ -183,5 +182,25 @@ class ApiControllerTest extends TestCase
     $this->expectExceptionMessage(sprintf(ApiController::ERROR_INVALID_CHARS_IN_FIELD, 'username', $data['username']));
 
     $this->subject->submitVote($this->request);
+  }
+
+  public function testResults(): void
+  {
+    $uuid = uniqid('uuid-', false);
+    $result = [
+        ['id' => 1, 'title' => 'A', 'usernames' => ['x', 'y']],
+        ['id' => 3, 'title' => 'B', 'usernames' => ['z', 't']],
+    ];
+
+    $this->dp->expects(self::once())
+      ->method('getResults')
+      ->with($uuid)
+      ->willReturn($result);
+
+    ob_start();
+    $this->subject->results($uuid);
+    $echo = ob_get_clean();
+
+    self::assertEquals($result, json_decode($echo, true));
   }
 }

@@ -70,9 +70,8 @@ class ApiController extends BaseApiController
 
   public function results(string $uuid): void
   {
-    $this->json([
-        'status' => self::class . '::results not implemented',
-        'uuid' => $uuid,
-    ]);
+    $results = $this->data->getResults($uuid);
+
+    $this->json($results);
   }
 }
