@@ -7,10 +7,20 @@ use Xiag\Poll\Data\DataProvider;
 use Xiag\Poll\Data\DataProviderInterface;
 use Xiag\Poll\Data\PdoDB;
 use Xiag\Poll\Data\SqlDbInterface;
+use Xiag\Poll\Util\JsonRequestDecorator;
+use Xiag\Poll\Util\Request;
+use Xiag\Poll\Util\RequestInterface;
 use Xiag\Poll\Util\UniqIdGenInterface;
-use function DI\autowire;
 
 return [
+    RequestInterface::class      => static function () {
+      $request = new Request();
+      if (preg_match('#^application/json#', $request->getHeaders()['Content-Type'] ?? '')) {
+        $request = new JsonRequestDecorator($request);
+      }
+
+      return $request;
+    },
     SqlDbInterface::class        => static function () {
       $pdo = new PDO($_ENV['DB_DSN'], $_ENV['DB_USER'], $_ENV['DB_PASS'],
           $_ENV['DB_OPTIONS'] ? preg_split('#\s*,\s*#', $_ENV['DB_OPTIONS']) : null);
@@ -24,6 +34,6 @@ return [
         }
       };
     },
-    CrudDbInterface::class       => autowire(CrudDb::class),
-    DataProviderInterface::class => autowire(DataProvider::class),
+    CrudDbInterface::class       => DI\autowire(CrudDb::class),
+    DataProviderInterface::class => DI\autowire(DataProvider::class),
 ];
