@@ -7,6 +7,7 @@ use Xiag\Poll\Exception\AppException;
 use Xiag\Poll\Util\RequestInterface;
 use function array_filter;
 use function array_map;
+use function preg_match;
 use function sprintf;
 use function trim;
 
@@ -14,6 +15,8 @@ class ApiController extends BaseApiController
 {
   public const ERROR_EMPTY_FIELD = 'Field %s is empty';
   public const ERROR_INVALID_ANSWERS  = 'There must be at least two possible non-empty answers';
+  public const ERROR_INVALID_CHARS_IN_FIELD  = 'Field %s=%s contains bad characters';
+
   /**
    * @var DataProviderInterface
    */
@@ -55,6 +58,9 @@ class ApiController extends BaseApiController
     $username = trim($request->get('username'));
     if (empty($username)) {
       throw new AppException(sprintf(self::ERROR_EMPTY_FIELD, 'username'));
+    }
+    if (preg_match('/[^\p{L}\d\s_-]/ui', $username)) {
+      throw new AppException(sprintf(self::ERROR_INVALID_CHARS_IN_FIELD, 'username', $username));
     }
 
     $vote = $this->data->vote($answer_id, $username);

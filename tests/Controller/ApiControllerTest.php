@@ -167,4 +167,21 @@ class ApiControllerTest extends TestCase
 
     $this->subject->submitVote($this->request);
   }
+
+  public function testSubmitVoteBadUsername(): void
+  {
+    $data = [
+        'answer_id' => 1,
+        'username'  => "a, b",
+    ];
+    $this->request->method('get')
+        ->willReturnCallback(static function ($key, $default = null) use ($data) {
+          return $data[$key] ?? $default;
+        });
+
+    $this->expectException(AppException::class);
+    $this->expectExceptionMessage(sprintf(ApiController::ERROR_INVALID_CHARS_IN_FIELD, 'username', $data['username']));
+
+    $this->subject->submitVote($this->request);
+  }
 }
