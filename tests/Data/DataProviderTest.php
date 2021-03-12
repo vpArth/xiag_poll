@@ -7,9 +7,11 @@ use PHPUnit\Framework\TestCase;
 use Xiag\Poll\Data\CrudDbInterface;
 use Xiag\Poll\Data\DataProvider;
 use Xiag\Poll\Data\DBException;
+use Xiag\Poll\Data\SqlDbInterface;
 use Xiag\Poll\Util\UniqIdGenInterface;
 use function array_merge;
 use function random_int;
+use function sprintf;
 use function uniqid;
 
 class DataProviderTest extends TestCase
@@ -28,12 +30,17 @@ class DataProviderTest extends TestCase
   private $uniq;
 
   private $testData;
+  /**
+   * @var MockObject|SqlDbInterface
+   */
+  private $db;
 
   protected function setUp(): void
   {
+    $this->db      = $this->createMock(SqlDbInterface::class);
     $this->crud    = $this->createMock(CrudDbInterface::class);
     $this->uniq    = $this->createMock(UniqIdGenInterface::class);
-    $this->subject = new DataProvider($this->crud, $this->uniq);
+    $this->subject = new DataProvider($this->crud, $this->db, $this->uniq);
 
     $this->testData = [
         'ok' => [
@@ -143,7 +150,6 @@ class DataProviderTest extends TestCase
     $vote = $this->subject->vote($answer_id, $username);
     self::assertEquals(['id' => $vote_id, 'answer_id' => $answer_id, 'username' => $username], $vote);
   }
-
   public function testVoteFail(): void
   {
     $this->crud->expects(self::once())
@@ -153,5 +159,47 @@ class DataProviderTest extends TestCase
     $id = 113;
     $this->expectExceptionMessage("Answer#{$id} not found");
     $this->subject->vote($id, 'John');
+  }
+  public function testVoteCommaInUsername(): void
+  {
+    $id = 113;
+    $this->expectExceptionMessage(DataProvider::ERROR_WRONG_USERNAME);
+    $this->subject->vote($id, 'Me, you and others');
+  }
+
+  public function testGetResults(): void
+  {
+    $uuid = uniqid('uuid-', false);
+
+    $result = [
+        ['id' => 3, 'title' => 'A', 'usernames' => 'x,y,z'],
+        ['id' => 7, 'title' => 'B', 'usernames' => 't'],
+    ];
+
+    $this->db->expects(self::once())
+        ->method('rows')
+        ->with(DataProvider::SQL_RESULTS, [$uuid])
+        ->willReturn($result);
+
+    $results = $this->subject->getResults($uuid);
+
+    self::assertEquals([
+        ['id' => 3, 'title' => 'A', 'usernames' => ['x', 'y', 'z']],
+        ['id' => 7, 'title' => 'B', 'usernames' => ['t']],
+    ], $results);
+  }
+  public function testGetResultsFail(): void
+  {
+    $uuid = 'wrong_uuid';
+
+    $this->db->expects(self::once())
+        ->method('rows')
+        ->with(DataProvider::SQL_RESULTS, [$uuid])
+        ->willReturn([]);
+
+    $this->expectException(DBException::class);
+    $this->expectExceptionMessage(sprintf(DataProvider::ERROR_ENTITY_NOT_FOUND, 'Poll', $uuid));
+
+    $this->subject->getResults($uuid);
   }
 }

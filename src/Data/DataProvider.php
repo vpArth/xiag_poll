@@ -2,11 +2,16 @@
 
 namespace Xiag\Poll\Data;
 
-use Xiag\Poll\Exception\AppException;
 use Xiag\Poll\Util\UniqIdGenInterface;
+use function explode;
+use function mb_strpos;
+use function sprintf;
 
 class DataProvider implements DataProviderInterface
 {
+  public const ERROR_WRONG_USERNAME   = 'Comma is forbidden character for username';
+  public const ERROR_ENTITY_NOT_FOUND = '%s#%s not found';
+
   /**
    * @var CrudDbInterface
    */
@@ -16,10 +21,16 @@ class DataProvider implements DataProviderInterface
    * @var UniqIdGenInterface
    */
   protected $uniqIdGen;
+  /**
+   * @var SqlDbInterface
+   */
+  protected $db;
 
-  public function __construct(CrudDbInterface $crud, UniqIdGenInterface $uniqIdGen)
+  public function __construct(CrudDbInterface $crud, SqlDbInterface $db, UniqIdGenInterface $uniqIdGen)
   {
-    $this->crud      = $crud;
+    $this->crud = $crud;
+    $this->db   = $db;
+
     $this->uniqIdGen = $uniqIdGen;
   }
 
@@ -54,7 +65,7 @@ class DataProvider implements DataProviderInterface
         'uuid' => $uuid,
     ]);
     if (!$result) {
-      throw new AppException("Poll#{$uuid} not found");
+      throw new DBException(sprintf(self::ERROR_ENTITY_NOT_FOUND, 'Poll', $uuid));
     }
 
     $result['answers'] = $this->crud->find('Answer', [
@@ -65,6 +76,10 @@ class DataProvider implements DataProviderInterface
   }
   public function vote(int $answer_id, string $username): array
   {
+    if (mb_strpos($username, ',')) {
+      // if you need to allow comma, change separator in GROUP_CONCAT of getResults method
+      throw new DBException(self::ERROR_WRONG_USERNAME);
+    }
     $vote = [
         'answer_id' => $answer_id,
         'username'  => $username,
@@ -72,9 +87,41 @@ class DataProvider implements DataProviderInterface
     try {
       $vote['id'] = $this->crud->insert('Vote', $vote);
     } catch (DBException $ex) {
-      throw new DBException("Answer#{$answer_id} not found", 404, $ex);
+      throw new DBException(sprintf(self::ERROR_ENTITY_NOT_FOUND, 'Answer', $answer_id), 404, $ex);
     }
 
     return $vote;
+  }
+
+  /*
+   * note:
+   * There are GROUP_CONCAT function in both SQLite and MySQL RDBMS
+   * But if other need to be supported some abstraction layer will be required
+   * Platform-dependent implementations of SqlDbInterface would be sufficient for that
+   *
+   * Default separator(comma) is used, because it is forbidden in validation
+   */
+  public const SQL_RESULTS = <<<SQL
+SELECT a.id, a.title, GROUP_CONCAT(v.username) usernames
+FROM Poll p
+JOIN Answer a ON a.id_poll = p.id
+JOIN Vote v ON v.id_answer = a.id
+WHERE p.uuid = ?
+GROUP BY a.id, a.title
+SQL;
+
+  public function getResults(string $uuid): array
+  {
+    $data = $this->db->rows(self::SQL_RESULTS, [$uuid]);
+    if (empty($data)) {
+      throw new DBException(sprintf(self::ERROR_ENTITY_NOT_FOUND, 'Poll', $uuid));
+    }
+
+    foreach ($data as &$row) {
+      $row['usernames'] = explode(',', $row['usernames']);
+    }
+    unset($row);
+
+    return $data;
   }
 }
