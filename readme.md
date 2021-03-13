@@ -32,7 +32,7 @@ _______
 #### Installation instructions
 
 ```shell script
-git clone vpArth/xiag_poll && cd xiag_poll
+git clone https://github.com/vpArth/xiag_poll.git && cd xiag_poll
 
 composer install --no-dev --optimize-autoloader
 
