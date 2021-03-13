@@ -25,3 +25,20 @@ User’s stories:
 #### Expected result:
   a. Source code  
   b. System requirements and installation instructions on our platform, in English.  
+
+
+_______
+
+#### Installation instructions
+
+```shell script
+git clone vpArth/xiag_poll && cd xiag_poll
+
+composer install --no-dev --optimize-autoloader
+
+# Create and edit .env.local, if you want non-default database(Default is «sqlite:/tmp/xiag_poll.db»)
+bin/install.php # Create project schema
+
+# Setup any webserver to serve that project with document root in public and front controller public/index.php
+php -S 0.0.0.0:1080 -t public # for example
+```
