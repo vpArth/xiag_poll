@@ -51,9 +51,9 @@ class ApiController extends BaseApiController
 
   public function submitVote(RequestInterface $request): void
   {
-    $answer_id = (int) $request->get('answer_id');
+    $answer_id = (int)$request->get('id_answer');
     if (empty($answer_id)) {
-      throw new AppException(sprintf(self::ERROR_EMPTY_FIELD, 'answer_id'));
+      throw new AppException(sprintf(self::ERROR_EMPTY_FIELD, 'id_answer'));
     }
     $username = trim($request->get('username'));
     if (empty($username)) {

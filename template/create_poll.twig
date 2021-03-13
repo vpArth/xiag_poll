@@ -1,0 +1,25 @@
+{% extends "layout.twig" %}
+
+{% block content %}
+    <form class="poll">
+        <table class="poll-table"></table>
+        <button class="btn btn--start">
+            Start
+        </button>
+        <p class="errors"></p>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+    {{ parent() }}
+    <script src="/js/poll-form.js"></script>
+    <script>
+    const pollForm = new PollForm(api);
+    pollForm.render();
+
+    document.querySelector('form.poll').addEventListener('submit', event => {
+      pollForm.submit();
+      event.preventDefault();
+    });
+    </script>
+{% endblock %}

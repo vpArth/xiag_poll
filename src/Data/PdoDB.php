@@ -48,7 +48,7 @@ class PdoDB implements SqlDbInterface
 
     $res !== false || $this->error($stmt);
 
-    return $res;
+    return $res ?: [];
   }
 
   public function rows(string $sql, array $data = []): array

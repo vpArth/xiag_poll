@@ -1,6 +1,8 @@
 <?php
 
 use Ramsey\Uuid\Uuid;
+use Twig\Loader\FilesystemLoader;
+use Twig\Loader\LoaderInterface;
 use Xiag\Poll\Data\CrudDb;
 use Xiag\Poll\Data\CrudDbInterface;
 use Xiag\Poll\Data\DataProvider;
@@ -36,4 +38,7 @@ return [
     },
     CrudDbInterface::class       => DI\autowire(CrudDb::class),
     DataProviderInterface::class => DI\autowire(DataProvider::class),
+    LoaderInterface::class       => static function () {
+      return new FilesystemLoader(dirname(__DIR__) . '/template');
+    },
 ];

@@ -144,11 +144,11 @@ class DataProviderTest extends TestCase
 
     $this->crud->expects(self::once())
         ->method('insert')
-        ->with('Vote', ['answer_id' => $answer_id, 'username' => $username])
+        ->with('Vote', ['id_answer' => $answer_id, 'username' => $username])
         ->willReturn($vote_id);
 
     $vote = $this->subject->vote($answer_id, $username);
-    self::assertEquals(['id' => $vote_id, 'answer_id' => $answer_id, 'username' => $username], $vote);
+    self::assertEquals(['id' => $vote_id, 'id_answer' => $answer_id, 'username' => $username], $vote);
   }
   public function testVoteFail(): void
   {
@@ -174,6 +174,7 @@ class DataProviderTest extends TestCase
     $result = [
         ['id' => 3, 'title' => 'A', 'usernames' => 'x,y,z'],
         ['id' => 7, 'title' => 'B', 'usernames' => 't'],
+        ['id' => 9, 'title' => 'C', 'usernames' => ''],
     ];
 
     $this->db->expects(self::once())
@@ -186,6 +187,7 @@ class DataProviderTest extends TestCase
     self::assertEquals([
         ['id' => 3, 'title' => 'A', 'usernames' => ['x', 'y', 'z']],
         ['id' => 7, 'title' => 'B', 'usernames' => ['t']],
+        ['id' => 9, 'title' => 'C', 'usernames' => []],
     ], $results);
   }
   public function testGetResultsFail(): void

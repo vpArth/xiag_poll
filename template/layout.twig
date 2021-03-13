@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8"/>
+    <link href="/css/style.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css"
+          href="https://fonts.googleapis.com/css?family=Roboto+Condensed:300,400,400i,700"
+          media="all">
+    <title>XIAG test task</title>
+    <meta name="robots" content="noindex,nofollow"/>
+    <meta name="viewport"
+          content="width=device-width, user-scalable=yes, initial-scale=1.0, minimum-scale=1.0, maximum-scale=2.0"/>
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+</head>
+<body>
+<div class="page">
+    <div class="page__header">
+        <div class="page__logo">
+            <a href="https://www.xiag.ch" target="_blank" rel="noopener noreferrer">
+                <img src="/images/page-logo.png" alt="XIAG AG">
+            </a>
+        </div>
+        <div class="page__task-name">
+            Poll website task: {{ name }}
+        </div>
+    </div>
+    <div class="page__image">
+        <div class="page__task-title">
+            Poll website task: {{ title }}
+        </div>
+    </div>
+    <div class="page__content page__content--padding">
+        {% block content %}{% endblock %}
+    </div>
+</div>
+{% block scripts %}
+    <script src="/js/api.js"></script>
+    <script>
+    const api = new PollApi();
+    </script>
+{% endblock %}
+</body>
+</html>

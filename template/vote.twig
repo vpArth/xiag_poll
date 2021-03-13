@@ -1,0 +1,92 @@
+{% extends "layout.twig" %}
+
+{% block scripts %}
+    {{ parent() }}
+    <script>
+    {
+      const poll = {{ poll | json_encode | raw }};
+      const form = document.querySelector('form.vote');
+
+      const showResults = (results) => {
+        console.log(results);
+        const thead     = document.createElement('thead');
+        thead.innerHTML = `<tr><th>Name` + poll.answers.map(a => `<th data-id="${a.id}">${a.title}`).join('');
+
+        const tbody = document.createElement('thead');
+        const users = results.reduce((acc, ans) => acc.concat(ans.usernames.map(u => ({name: u, ans}))), []);
+        console.log(users);
+        users.forEach(user => {
+          const tr     = document.createElement('tr');
+          tr.innerHTML = `<td>${user.name}` + poll.answers.map(a => `<td>${a.id === user.ans.id ? 'x' : ''}`).join('');
+          tbody.appendChild(tr);
+        });
+
+        const table = document.createElement('table');
+        table.classList.add('ex2-table');
+        table.appendChild(thead);
+        table.appendChild(tbody);
+
+        const section     = document.querySelector('#results');
+        section.innerHTML = '<h1>Results</h1>';
+        section.appendChild(table);
+      };
+
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+
+        const formData  = new FormData(form);
+        const username  = formData.get('username');
+        const id_answer = formData.get('id_answer');
+
+        // Disable form
+        [...form.elements].forEach(el => el.disabled = true);
+        document.querySelector('.ex2-question__submit').style.display = 'none';
+
+        api.submitVote(id_answer, username)
+          .then(() => {
+            // Load results
+            console.debug('vote accepted');
+            console.debug('load results');
+          })
+          .then(() => api.results(poll.uuid))
+          .then(showResults)
+          .catch(err => {
+            // Enable form
+            console.error(err);
+            alert(err || err.message);
+          });
+
+      });
+    }
+    </script>
+{% endblock %}
+
+{% block content %}
+    <form class="poll vote">
+        <h1>
+            {{ poll.question }}
+        </h1>
+
+        <div class="ex2-question">
+            <div class="ex2-question__label">
+                Your name:
+            </div>
+            <div class="ex2-question__input">
+                <input type="text" name="username" class="input-text" required>
+            </div>
+            <div class="ex2-question__answer">
+                {% for answer in poll.answers %}
+                    <label>
+                        <input type="radio" name="id_answer" value="{{ answer.id }}" required>
+                        {{ answer.title }}
+                    </label>
+                {% endfor %}
+            </div>
+            <div class="ex2-question__submit">
+                <input type="submit" class="btn" value="Submit">
+            </div>
+        </div>
+        <section id="results"></section>
+
+    </form>
+{% endblock %}

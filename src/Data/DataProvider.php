@@ -4,6 +4,7 @@ namespace Xiag\Poll\Data;
 
 use Throwable;
 use Xiag\Poll\Util\UniqIdGenInterface;
+use function array_filter;
 use function explode;
 use function mb_strpos;
 use function sprintf;
@@ -89,7 +90,7 @@ class DataProvider implements DataProviderInterface
       throw new DBException(self::ERROR_WRONG_USERNAME);
     }
     $vote = [
-        'answer_id' => $answer_id,
+        'id_answer' => $answer_id,
         'username'  => $username,
     ];
     try {
@@ -113,7 +114,7 @@ class DataProvider implements DataProviderInterface
 SELECT a.id, a.title, GROUP_CONCAT(v.username) usernames
 FROM Poll p
 JOIN Answer a ON a.id_poll = p.id
-JOIN Vote v ON v.id_answer = a.id
+LEFT JOIN Vote v ON v.id_answer = a.id
 WHERE p.uuid = ?
 GROUP BY a.id, a.title
 SQL;
@@ -126,7 +127,7 @@ SQL;
     }
 
     foreach ($data as &$row) {
-      $row['usernames'] = explode(',', $row['usernames']);
+      $row['usernames'] = array_filter(explode(',', $row['usernames']));
     }
     unset($row);
 

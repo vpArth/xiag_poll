@@ -113,7 +113,7 @@ class ApiControllerTest extends TestCase
   public function testSubmitVote(): void
   {
     $data = [
-        'answer_id' => random_int(501, 599),
+        'id_answer' => random_int(501, 599),
         'username'  => uniqid('user_', false),
     ];
     $this->request->method('get')
@@ -126,7 +126,7 @@ class ApiControllerTest extends TestCase
 
     $this->dp->expects(self::once())
         ->method('vote')
-        ->with($data['answer_id'], $data['username'])
+        ->with($data['id_answer'], $data['username'])
         ->willReturn($response);
 
     ob_start();
@@ -138,7 +138,7 @@ class ApiControllerTest extends TestCase
   public function testSubmitVoteNoAnswer(): void
   {
     $data = [
-        'answer_id' => 'none',
+        'id_answer' => 'none',
         'username'  => uniqid('user_', false),
     ];
     $this->request->method('get')
@@ -147,14 +147,14 @@ class ApiControllerTest extends TestCase
         });
 
     $this->expectException(AppException::class);
-    $this->expectExceptionMessage(sprintf(ApiController::ERROR_EMPTY_FIELD, 'answer_id'));
+    $this->expectExceptionMessage(sprintf(ApiController::ERROR_EMPTY_FIELD, 'id_answer'));
 
     $this->subject->submitVote($this->request);
   }
   public function testSubmitVoteNoUsername(): void
   {
     $data = [
-        'answer_id' => 1,
+        'id_answer' => 1,
         'username'  => "   \t  ",
     ];
     $this->request->method('get')
@@ -170,7 +170,7 @@ class ApiControllerTest extends TestCase
   public function testSubmitVoteBadUsername(): void
   {
     $data = [
-        'answer_id' => 1,
+        'id_answer' => 1,
         'username'  => "a, b",
     ];
     $this->request->method('get')
